@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="author" content="Cesar Gutierrez Tineo">
+    <title>Panel de atencion</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://getbootstrap.com/docs/5.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- Favicons -->
+    <!--<link rel="apple-touch-icon" href="/docs/5.0/assets/img/favicons/apple-touch-icon.png" sizes="180x180">
+    <link rel="icon" href="/docs/5.0/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/docs/5.0/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">
+    <link rel="manifest" href="/docs/5.0/assets/img/favicons/manifest.json">
+    <link rel="mask-icon" href="/docs/5.0/assets/img/favicons/safari-pinned-tab.svg" color="#7952b3">
+    <link rel="icon" href="/docs/5.0/assets/img/favicons/favicon.ico">-->
+    <meta name="theme-color" content="#7952b3">
+
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+
+        }
+        @media (max-width: 576px) {
+            .fix-button-height{
+                line-height: 1.6rem;
+            }
+            .btn{
+                font-size: 1rem;
+            }
+        }
+    </style>
+
+    <!-- Bootstrap icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" />
+    <!-- Custom styles for this template -->
+    <!-- <link href="https://getbootstrap.com/docs/5.0/examples/navbar-static/navbar-top.css" rel="stylesheet"> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script>
+        String.prototype.lpad = function(padString, length) {
+            var str = this;
+            while (str.length < length)
+                str = padString + str;
+            return str;
+        }
+        var srv_types = {};
+        srv_types["TV"] = "TV";
+        srv_types["SMART SERVICE"] = "SM";
+        srv_types["MOBILE"] = "MO";
+
+        $(function() {
+
+            var intervalId = window.setInterval(function(){
+
+                $.ajax({
+                    method: "POST",
+                    url: "/queue",
+                    //data: JSON.stringify({ agent: cur_agent }),
+                    contentType: "application/json"
+                }).done(function(data) {
+                    console.log(data);
+                    console.log(data.length);
+                    $("#in_queue").text(""+data.length);
+
+                }).fail(function() {
+                    $("#modal-msg").text("Selecciona el agente");
+                    $("#my-modal").modal("show");
+                })
+
+            }, 1150);
+
+
+            $("#select-agente a").click(function() {
+                $("#agente").text("("+$(this).text()+")");
+            });
+
+            $("#llamar").click(function (){
+
+                if($("#agente").text()==""){
+                    $("#modal-msg").text("Selecciona el agente");
+                    $("#my-modal").modal("show");
+                    return;
+                }
+
+                var cur_agent = $("#agente").text().slice(1, -1);
+                $.ajax({
+                    method: "POST",
+                    url: "/pick_next",
+                    data: JSON.stringify({ agent: cur_agent }),
+                    contentType: "application/json"
+                }).done(function(data) {
+                    console.log(data);
+                    if(data.counter == undefined){
+                        $("#my-modal").modal("show");
+                        $("#modal-msg").text("No hay tickets disponibles");
+                    }else{
+                        $("#called_counter").text(srv_types[data.service]+""+data.counter.toString().lpad("0", 3));
+                        $("#current_number").text("("+srv_types[data.service]+""+data.counter.toString().lpad("0", 3)+")");
+                        $("#ping_id").attr("value",data.id);
+                    }
+                }).fail(function() {
+                    $("#modal-msg").text("Hubo un problema");
+                    $("#my-modal").modal("show");
+                }).always(function (){
+                    $.ajax({
+                        method: "POST",
+                        url: "/queue",
+                        //data: JSON.stringify({ agent: cur_agent }),
+                        contentType: "application/json"
+                    }).done(function(data) {
+                        console.log(data);
+                        console.log(data.length);
+                        $("#in_queue").text(""+data.length);
+
+                    }).fail(function() {
+                        $("#modal-msg").text("Hubo un problema");
+                        $("#my-modal").modal("show");
+                    })
+                });
+            });
+
+            $("#saltar").click(function (){
+
+                if($("#ping_id").attr("value") === undefined) return;
+
+                $.ajax({
+                    method: "POST",
+                    url: "/attention",
+                    data: JSON.stringify({ ping_id: $("#ping_id").attr("value"), new_status: "S" }),
+                    contentType: "application/json"
+                }).done(function(data) {
+                    console.log(data);
+                    $("#called_counter").text("(En espera)");
+                    $("#current_number").text("");
+
+                }).fail(function() {
+                    $("#my-modal").modal("show");
+                    $("#modal-msg").text("Hubo un problema");
+                }).always(function (){
+                    $.ajax({
+                        method: "POST",
+                        url: "/queue",
+                        //data: JSON.stringify({ agent: cur_agent }),
+                        contentType: "application/json"
+                    }).done(function(data) {
+                        console.log(data);
+                        console.log(data.length);
+                        $("#in_queue").text(""+data.length);
+
+                    }).fail(function() {
+                        $("#modal-msg").text("Hubo un problema");
+                        $("#my-modal").modal("show");
+                    })
+                });
+            });
+
+            $("#atender").click(function (){
+
+                if($("#ping_id").attr("value") === undefined) return;
+
+                $.ajax({
+                    method: "POST",
+                    url: "/attention",
+                    data: JSON.stringify({ ping_id: $("#ping_id").attr("value"), new_status: "A" }),
+                    contentType: "application/json"
+                }).done(function(data) {
+                    console.log(data);
+                    $("#called_counter").text("(En espera)");
+                    $("#current_number").text("");
+                }).fail(function() {
+                    $("#modal-msg").text("Hubo un problema");
+                    $("#my-modal").modal("show");
+                }).always(function (){
+                    $.ajax({
+                        method: "POST",
+                        url: "/queue",
+                        //data: JSON.stringify({ agent: cur_agent }),
+                        contentType: "application/json"
+                    }).done(function(data) {
+                        console.log(data);
+                        console.log(data.length);
+                        $("#in_queue").text(""+data.length);
+
+                    }).fail(function() {
+                        $("#modal-msg").text("Hubo un problema");
+                        $("#my-modal").modal("show");
+                    })
+                });
+            });
+
+
+        });
+    </script>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Atencion</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <!--<li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                </li>-->
+            </ul>
+            <form class="d-flex">
+                <!--<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">-->
+
+                <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Agente <span style="font-weight: bolder" id="agente"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink" id="select-agente">
+                                <li><a class="dropdown-item" href="#">A0001</a></li>
+                                <li><a class="dropdown-item" href="#">A0002</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <a class="btn btn-outline-success" href="/summary" target="_self" >Reporte</a>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <div class="row align-items-center">
+                <div class="col">
+                    <div class="d-grid gap2">
+                        <button type="button" class="btn btn-outline-primary  btn-lg btn-block " id="llamar">
+                            <i class="bi bi-megaphone "></i>
+                            <br/>
+                            Llamar
+                        </button>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="d-grid gap2">
+                        <button type="button" class="btn btn-outline-primary  btn-lg btn-block fix-button-height"  id="saltar">
+                            <i class="bi bi-skip-end-circle"></i>
+                            <br/>
+                            Saltar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row align-items-center mt-4">
+                <div class="d-grid gap2">
+                    <input type="hidden" id="ping_id" />
+                    <button type="button" class="btn btn-outline-primary  btn-lg btn-block" id="atender">
+                        <i class="bi bi-check2-all"></i>
+                        <br/>
+                        Terminar atencion <span id="current_number"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-6 p-3">
+                    <div class="h-100 p-3 bg-light border border-success rounded-3 text-center ">
+                        <h1><i class="bi bi-chat-dots"></i></h1>
+                        <h5>Numero para atencion</h5>
+                        <h1 id="called_counter">(En espera)</h1>
+                    </div>
+                </div>
+
+                <div class="col-md-6 p-3">
+                    <div class="h-100 p-3 bg-light border rounded-3 text-center ">
+                        <h1><i class="bi bi-ticket-perforated"></i></h1>
+                        <h5>Numeros en cola</h5>
+                        <h1 id="in_queue">0</h1>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+</main>
+
+<div class="modal" tabindex="-1" id="my-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tickets</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-msg"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://getbootstrap.com/docs/5.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+</body>
+</html>
