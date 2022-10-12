@@ -19,3 +19,5 @@
 /phpunit.xml
 .idea/
 ###< symfony/phpunit-bridge ###
+.env
+/migrations/*.php
