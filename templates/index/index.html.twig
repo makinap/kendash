@@ -232,15 +232,20 @@
             <form class="d-flex">
                 <!--<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">-->
 
-                <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+                <li class="collapse navbar-collapse" id="navbarNavDarkDropdown">
                     <ul class="navbar-nav">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Agente <span style="font-weight: bolder" id="agente"></span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink" id="select-agente">
-                                <li><a class="dropdown-item" href="#">A0001</a></li>
-                                <li><a class="dropdown-item" href="#">A0002</a></li>
+
+                                {% for agent in agents %}
+                                <li><a class="dropdown-item" href="#"> {{ agent.codename }} </a></li>
+                                    {% else %}
+                                <li>&nbsp;&nbsp;No hay agentes asignados</li>
+                                {% endfor %}
+
                             </ul>
                         </li>
                     </ul>

@@ -5,6 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     timezone: '%env(APP_TIMEZONE)%'
+    availables_sites: '%env(json:AVAILABLE_SITES)%'
 services:
     # default configuration for services in *this* file
     _defaults:

@@ -15,8 +15,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 class QueueController extends AbstractController
 {
-    public function queue(ManagerRegistry $doctrine): JsonResponse
+    public function queue(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
+        $domain = $request->getHost();
         $dateTime = new \DateTime("now");
         $entityManager = $doctrine->getManager();
 
@@ -31,10 +32,12 @@ class QueueController extends AbstractController
             )
             ->where('p.registered_on BETWEEN :dateMin AND :dateMax')
             ->andWhere("a.id IS NULL")
+            ->andWhere("p.site = :site")
             ->setParameters(
                 [
                     'dateMin' => $dateTime->format('Y-m-d 00:00:00'),
                     'dateMax' => $dateTime->format('Y-m-d 23:59:59'),
+                    'site' => $domain
                 ]
             );
         return new JsonResponse($qb->getQuery()->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY));

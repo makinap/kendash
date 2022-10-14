@@ -26,6 +26,18 @@ class Ping
     #[ORM\Column(type: Types::DATETIMETZ_MUTABLE)]
     private ?\DateTimeInterface $registered_on = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $site = null;
+
+    public function __construct()
+    {
+        $this->registered_on = new \DateTime('now');
+    }
+
+    public function __toString() : String
+    {
+        return $this->getShortService().str_pad($this->counter,"4","0",STR_PAD_LEFT);
+    }
     public function getId(): ?int
     {
         return $this->id;
@@ -41,6 +53,16 @@ class Ping
         $this->device = $device;
 
         return $this;
+    }
+
+    public function getShortService(): string
+    {
+         return match ($this->service) {
+                 "MOBILE" => "MO",
+                 "TV" => "TV",
+                 "SMART SERVICE" => "SM",
+                 default => "SP",
+             };
     }
 
     public function getService(): ?string
@@ -75,6 +97,18 @@ class Ping
     public function setRegisteredOn(\DateTimeInterface $registered_on): self
     {
         $this->registered_on = $registered_on;
+
+        return $this;
+    }
+
+    public function getSite(): ?string
+    {
+        return $this->site;
+    }
+
+    public function setSite(?string $site): self
+    {
+        $this->site = $site;
 
         return $this;
     }

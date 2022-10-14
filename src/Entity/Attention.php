@@ -29,6 +29,11 @@ class Attention
     #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $attented_on = null;
 
+    public function __construct()
+    {
+        $this->registered_on = new \DateTime('now');
+    }
+
     public function getId(): ?int
     {
         return $this->id;

@@ -23,6 +23,7 @@ class PingRepository extends ServiceEntityRepository
 
     public function save(Ping $entity, bool $flush = false): void
     {
+
         $this->getEntityManager()->persist($entity);
 
         if ($flush) {

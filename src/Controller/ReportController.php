@@ -8,12 +8,14 @@ use Doctrine\Persistence\ManagerRegistry;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends AbstractController
 {
-    function summary(ManagerRegistry $doctrine): StreamedResponse
+    function summary(ManagerRegistry $doctrine, Request $request): StreamedResponse
     {
+        $domain = $request->getHost();
         $dateTime = new \DateTime("now");
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -30,10 +32,12 @@ class ReportController extends AbstractController
                 'a.ping = p.id'
             )
             ->where('a.registered_on BETWEEN :dateMin AND :dateMax')
+            ->andWhere("p.site = :site")
             ->setParameters(
                 [
                     'dateMin' => $dateTime->format('Y-m-d 00:00:00'),
                     'dateMax' => $dateTime->format('Y-m-d 23:59:59'),
+                    'site' => $domain
                 ]
             );
         $results = $qb->getQuery()->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
