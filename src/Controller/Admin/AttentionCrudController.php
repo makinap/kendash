@@ -34,11 +34,17 @@ class AttentionCrudController extends AbstractCrudController
     {
 
         $site = $this->container->get('router')->getContext()->getHost();
-        $agents = $this->entityManager->getRepository(Agent::class)->findBy(array('site'=> $site));
-        $options = array();
-        foreach ($agents as $agent){
-            $options[$agent->getCodename()] = $agent->getId();
+
+        $agents_fields = TextField::new('agent',"Agente");
+        if (Crud::PAGE_NEW === $pageName) {
+            $agents = $this->entityManager->getRepository(Agent::class)->findBy(array('site'=> $site));
+            $options = array();
+            foreach ($agents as $agent){
+                $options[$agent->getCodename()] = $agent->getId();
+            }
+            $agents_fields = ChoiceField::new('agent',"Agente")->setChoices($options);
         }
+
         return [
             IdField::new('id')->hideOnForm(),
             //TextField::new('Ping.service', "Servicio"),
@@ -46,7 +52,8 @@ class AttentionCrudController extends AbstractCrudController
                 ->setCrudController(PingCrudController::class),
             //TextField::new('Ping.device', "Dispositivo"),
             //TextField::new('agent',"Agente"),
-            ChoiceField::new('agent',"Agente")->setChoices($options),
+            //ChoiceField::new('agent',"Agente")->setChoices($options),
+            $agents_fields,
             //TextField::new('status',"Estado"),
             ChoiceField::new('status',"Estado")->setChoices([
                 'No atendido' => 'S',
