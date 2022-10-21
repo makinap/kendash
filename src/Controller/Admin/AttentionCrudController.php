@@ -34,15 +34,7 @@ class AttentionCrudController extends AbstractCrudController
     {
 
         $site = $this->container->get('router')->getContext()->getHost();
-
-        $sites = $this->getParameter('availables_sites');
-        $sites_options = array();
-        foreach ($sites as $site){
-            $sites_options[$site["domain"]] = $site["domain"];
-        }
-
-
-
+        var_dump($site);
         $agents_fields = TextField::new('agent',"Agente");
         if (Crud::PAGE_NEW === $pageName) {
             $agents = $this->entityManager->getRepository(Agent::class)->findBy(array('site'=> $site));
@@ -53,11 +45,22 @@ class AttentionCrudController extends AbstractCrudController
             $agents_fields = ChoiceField::new('agent',"Agente")->setChoices($options);
         }
 
+        $sites_options = array();
+        $sites = $this->getParameter('availables_sites');
+
+        foreach ($sites as $site0){
+            $sites_options[$site0["domain"]] = $site0["domain"];
+        }
+        $sites_fields = ChoiceField::new('ping.site',"Sitio")
+            ->setChoices($sites_options)
+            ->hideOnForm();
+
         return [
             IdField::new('id')->hideOnForm(),
             //TextField::new('Ping.service', "Servicio"),
             AssociationField::new('ping', "Ticket")
                 ->setCrudController(PingCrudController::class),
+            $sites_fields,
             //TextField::new('Ping.device', "Dispositivo"),
             //TextField::new('agent',"Agente"),
             //ChoiceField::new('agent',"Agente")->setChoices($options),
@@ -68,7 +71,6 @@ class AttentionCrudController extends AbstractCrudController
                 'Atendido' => 'A',
                 'En espera' => 'C',
             ]),
-            ChoiceField::new('site', 'Dominio')->setChoices($sites_options),
             DateField::new('registered_on',"Fec.Registrado")
                 ->setFormat('dd/MM/yy HH:mm')->hideOnForm(),
             DateField::new('attented_on',"Fec.Atendido")
