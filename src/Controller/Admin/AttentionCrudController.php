@@ -7,12 +7,14 @@ use App\Entity\Attention;
 use App\Entity\Ping;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use Symfony\Component\HttpFoundation\Request;
 use App\Kernel;
 
@@ -34,7 +36,6 @@ class AttentionCrudController extends AbstractCrudController
     {
 
         $site = $this->container->get('router')->getContext()->getHost();
-        var_dump($site);
         $agents_fields = TextField::new('agent',"Agente");
         if (Crud::PAGE_NEW === $pageName) {
             $agents = $this->entityManager->getRepository(Agent::class)->findBy(array('site'=> $site));
@@ -92,5 +93,29 @@ class AttentionCrudController extends AbstractCrudController
                 fn(Attention $attention) => sprintf('Editar Atencion de <b>%s</b>',
                     $attention->getPing()->getShortService() . str_pad($attention->getPing()->getCounter(), "4", "0", STR_PAD_LEFT)));
     }
+
+    /*public function configureFilters(Filters $filters): Filters
+    {
+
+        $sites_options = array();
+        $sites = $this->getParameter('availables_sites');
+
+        foreach ($sites as $site0){
+            $sites_options[$site0["domain"]] = $site0["domain"];
+        }
+
+
+        return $filters
+
+            //->add(BooleanFilter::new('published'))
+            //->add(Filter::new('country')->mapped(false))
+            ->add(ChoiceFilter::new('status')->setChoices([
+                'No atendido' => 'S',
+                'Atendido' => 'A',
+                'En espera' => 'C',
+            ]))
+            ->add(ChoiceFilter::new('ping.site')->setChoices($sites_options))
+            ;
+    }*/
 
 }
