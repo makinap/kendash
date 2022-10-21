@@ -35,6 +35,14 @@ class AttentionCrudController extends AbstractCrudController
 
         $site = $this->container->get('router')->getContext()->getHost();
 
+        $sites = $this->getParameter('availables_sites');
+        $sites_options = array();
+        foreach ($sites as $site){
+            $sites_options[$site["domain"]] = $site["domain"];
+        }
+
+
+
         $agents_fields = TextField::new('agent',"Agente");
         if (Crud::PAGE_NEW === $pageName) {
             $agents = $this->entityManager->getRepository(Agent::class)->findBy(array('site'=> $site));
@@ -60,6 +68,7 @@ class AttentionCrudController extends AbstractCrudController
                 'Atendido' => 'A',
                 'En espera' => 'C',
             ]),
+            ChoiceField::new('site', 'Dominio')->setChoices($sites_options),
             DateField::new('registered_on',"Fec.Registrado")
                 ->setFormat('dd/MM/yy HH:mm')->hideOnForm(),
             DateField::new('attented_on',"Fec.Atendido")
